@@ -1,6 +1,6 @@
 # TinyIOC
 
-[![Build Status](https://travis-ci.org/RyaPorter/TinyIOC.svg?branch=master)](https://travis-ci.org/RyaPorter/})
+![Ubuntu Latest](https://github.com/RyaPorter/TinyIOC/workflows/Ubuntu%20Latest/badge.svg)
 
 
 TinyIOC is a small lightweight IOC container being developed for general curiosity. 
