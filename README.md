@@ -1,7 +1,5 @@
 # TinyIOC
 
-![](https://github.com/RyaPorter/TinyIOC/blob/master/.github/workflows/dotnetcore.yml/badge.svg)
-
 [![Build Status](https://travis-ci.org/RyaPorter/TinyIOC.svg?branch=master)](https://travis-ci.org/RyaPorter/})
 
 
