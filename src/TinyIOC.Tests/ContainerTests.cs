@@ -35,5 +35,34 @@ namespace TinyIOC.Tests
 
             Assert.AreEqual(true, instance != null);
         }
+
+
+        [TestMethod]
+        public void RegisterService_OnlyOneConstructorValid()
+        {
+            var container = new TinyContainer();
+            var typeInstance = new EmptyConreteType();
+
+            container.RegisterService<SecondParam>();
+            container.RegisterService<IInterfaceParam, InterfaceParam>();
+            container.RegisterService<ConcreteTypeMultiParam>();
+
+            var instance = container.ResolveService<ConcreteTypeMultiParam>();
+
+            Assert.AreEqual(true, instance != null);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(System.ArgumentException))]
+        public void RegisterService_NoConstructorValid()
+        {
+            var container = new TinyContainer();
+            var typeInstance = new EmptyConreteType();
+
+            container.RegisterService<IInterfaceParam, InterfaceParam>();
+            container.RegisterService<ConcreteTypeMultiParam>();
+
+            var instance = container.ResolveService<ConcreteTypeMultiParam>();
+        }
     }
 }

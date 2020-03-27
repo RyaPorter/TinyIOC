@@ -63,11 +63,17 @@ namespace TinyIOC
 
         private object ConstructService(Type implementation)
         {
-            var constructorInfo = implementation.GetConstructors();
+            ConstructorInfo[] infoCollection = implementation.GetConstructors();
 
-            foreach (var con in constructorInfo)
+            if (infoCollection.Length <= 0)
             {
-                var parameters = con.GetParameters();
+                throw new ArgumentException($"No public constructors found on type: {implementation.FullName}");
+            }
+
+            for (int i = 0; i < infoCollection.Length; i++)
+            {
+                ConstructorInfo constructorInfo = infoCollection[i];
+                ParameterInfo[] parameters = constructorInfo.GetParameters();
 
                 if (parameters.Length == 0)
                 {
@@ -75,18 +81,30 @@ namespace TinyIOC
                 }
                 else
                 {
-                    var paramInstances = new List<object>();
-                    foreach (var par in parameters)
+                    try
                     {
-                        var paramType = par.ParameterType;
+                        var paramInstances = new List<object>();
+                        foreach (var par in parameters)
+                        {
+                            var paramType = par.ParameterType;
+                            var instance = this.ResolveService(paramType);
+                            paramInstances.Add(instance);
+                        }
 
-                        var instance = this.ResolveService(paramType);
-                        paramInstances.Add(instance);
+                        return Activator.CreateInstance(implementation, paramInstances.ToArray());
                     }
-
-                    return Activator.CreateInstance(implementation, paramInstances.ToArray());
+                    catch
+                    {
+                        // We want to test every constructor first, then throw on the last one if no services are registered.
+                        if (i == infoCollection.Length - 1)
+                        {
+                            throw;
+                        }
+                        continue;
+                    }
                 }
             }
+
 
             throw new ArgumentException($"Could not resolve service {implementation.FullName}");
         }
