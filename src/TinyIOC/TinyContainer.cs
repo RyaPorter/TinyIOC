@@ -88,7 +88,7 @@ namespace TinyIOC
                 }
             }
 
-            return default;
+            throw new ArgumentException($"Could not resolve service {implementation.FullName}");
         }
 
     }
