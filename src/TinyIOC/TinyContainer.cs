@@ -47,28 +47,22 @@ namespace TinyIOC
             {
                 return value;
             }
-            else
+
+            if (RegisteredServices.TryGetValue(type, out Type implementation))
             {
-                if (RegisteredServices.TryGetValue(type, out Type implementation))
-                {
-                    return this.ConstructService(implementation);
-                }
-                else
-                {
-                    throw new ArgumentException(
-                        $"No services are registered that implement the given type: {type.ToString()}");
-                }
+                ConstructorInfo[] infoCollection = GatherConstructors(implementation);
+                return ConstructService(implementation, infoCollection);
             }
+
+
+            throw new ArgumentException(
+                $"No services are registered that implement the given type: {type.ToString()}");
+
+
         }
 
-        private object ConstructService(Type implementation)
+        private object ConstructService(Type implementation, ConstructorInfo[] infoCollection)
         {
-            ConstructorInfo[] infoCollection = implementation.GetConstructors();
-
-            if (infoCollection.Length <= 0)
-            {
-                throw new ArgumentException($"No public constructors found on type: {implementation.FullName}");
-            }
 
             for (int i = 0; i < infoCollection.Length; i++)
             {
@@ -79,35 +73,50 @@ namespace TinyIOC
                 {
                     return Activator.CreateInstance(implementation);
                 }
-                else
-                {
-                    try
-                    {
-                        var paramInstances = new List<object>();
-                        foreach (var par in parameters)
-                        {
-                            var paramType = par.ParameterType;
-                            var instance = this.ResolveService(paramType);
-                            paramInstances.Add(instance);
-                        }
 
-                        return Activator.CreateInstance(implementation, paramInstances.ToArray());
-                    }
-                    catch
+                try
+                {
+                    List<object> paramInstances = ResolveParameters(parameters);
+                    return Activator.CreateInstance(implementation, paramInstances.ToArray());
+                }
+                catch
+                {
+                    if (i < infoCollection.Length - 1)
                     {
-                        // We want to test every constructor first, then throw on the last one if no services are registered.
-                        if (i == infoCollection.Length - 1)
-                        {
-                            throw;
-                        }
                         continue;
                     }
+
+                    // Throw on the last constructor.
+                    throw;
                 }
             }
-
 
             throw new ArgumentException($"Could not resolve service {implementation.FullName}");
         }
 
+        private static ConstructorInfo[] GatherConstructors(Type implementation)
+        {
+            ConstructorInfo[] infoCollection = implementation.GetConstructors();
+
+            if (infoCollection.Length <= 0)
+            {
+                throw new ArgumentException($"No public constructors found on type: {implementation.FullName}");
+            }
+
+            return infoCollection;
+        }
+
+        private List<object> ResolveParameters(ParameterInfo[] parameters)
+        {
+            var paramInstances = new List<object>();
+            foreach (var par in parameters)
+            {
+                var paramType = par.ParameterType;
+                var instance = this.ResolveService(paramType);
+                paramInstances.Add(instance);
+            }
+
+            return paramInstances;
+        }
     }
 }
